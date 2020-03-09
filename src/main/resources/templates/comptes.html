@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html  xmlns:th="http://www.thymeleaf.org" 
+xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5 "
+
+layout:decorator="template1" >   <!--  ceci est obligatoire dans la balise html -->
+<head>
+<meta charset="utf-8"/>   <!--  Puisque thymeleaf utilise XHTML , il faudrai   fermer les balises ( et changer "ISO-8859-1" par "utf-8"/  -->
+<title>Banke</title>
+</head>
+<body>
+	<div layout:fragment="content">
+		<div class="col-md-6">
+		
+			<div class="panel panel-primary">
+					<div class="panel-heading">Konto anzeigen</div>
+					<div class="panel-body">
+					
+					<form th:action="@{/consulterCompte}" method="get">
+					 <div >
+					 	
+					 	<label>Kontonummer:</label>
+					 	<input type="text" name="codeCompte" th:value="${codeCompte}">
+					 	 <button type="submit">OK</button>
+					 
+					 </div>
+					
+					</form>
+					<div  class="text-danger" th:if="${exception}" th:text="${exception.message}">
+					
+					</div>
+					
+					</div>
+			
+			</div>
+			
+			
+			<!-- th:if="${compte}"  affiche les information s il s agit d un model de type compte -->
+			<div class="panel panel-primary" th:if="${compte}">
+					<div class="panel-heading">Kontoinformationen</div>
+					<div class="panel-body">
+					
+						
+					 <div>
+					 	<label>Kunde:</label>
+					 	<label th:text="${compte.client.nom}"></label>
+					 </div>
+					 <div>
+					 	<label>Kontonummer:</label>
+					 	<label th:text="${compte.codeCompte}"></label>
+					 </div>
+					 
+					  <div>
+					 	<label>Kontostand:</label>
+					 	<label th:text="${compte.solde}"></label>
+					 </div>
+					 
+					  <div>
+					 	<label>Erstellungsdatum:</label>
+					 	<label th:text="${compte.dateCreation}"></label>
+					 </div>
+					
+					 <div>
+					 	<label>Type von Konto:</label>
+					 	<label th:text="${compte.class.simpleName}"></label>
+					 </div>
+					 
+					 <!--  si c es compte courant on met decouvert et si contraire taux pour un compte d epargne -->
+					  <div th:if="${compte.class.simpleName=='CompteCourant'}">
+					 	<label>Kontoüberziehung:</label>
+					 	<label th:text="${compte.decouvert}"></label>
+					 </div>
+					 
+					  
+					  <div th:if="${compte.class.simpleName=='CompteEpargne'}">
+					 	<label>Taux:</label>
+					 	<label th:text="${compte.Taux}"></label>
+					 </div>
+					</div>
+			
+			</div>
+				
+		</div>
+		
+				<div class="col-md-6">
+					<div  sec:authorize="hasRole('ROLE_ADMIN')">
+						<div class="panel panel-primary"  th:if="${compte}">
+				<div class="panel-heading"> Kontotransaktionen</div>
+				<div class="panel-body">
+					<form th:action="@{/saveOperation}" method="post">
+					
+						<div>
+							<label> Konto  : </label>
+							<input type="hidden" name="codeCompte" th:value="${codeCompte}"  />
+							<label th:text="${codeCompte}" ></label>
+						</div>
+						
+						<div>
+							<input type="radio" name="typeOperation" value="VERS"
+							checked="checked"  onchange=" document.getElementById('forVirement').style.display='none' " />
+							<label>Anzahlung</label>
+							<input type="radio" name="typeOperation" value="RETR" 
+							 onchange=" document.getElementById('forVirement').style.display='none' " />
+							<label>Auszahlung</label>
+							<input type="radio" name="typeOperation" value="VIR" 
+							 onchange=" document.getElementById('forVirement').style.display='block' " />
+							<label>Überweisung</label>
+						</div>
+						
+						<div id="forVirement"  style="display:none">
+							<label> Nach : </label>
+							<input type="text"  name="codeCompte2"  />
+						</div>
+						
+						<div>
+							<label> Betrag : </label>
+							<input type="text"  name="montant"  />
+						</div>
+						
+						<div class="text-danger"				
+						th:text="${#httpServletRequest.getParameter('error')}">
+							
+						</div>
+						
+						<button type="submit" class="btn btn-primary"> Save </button>
+						<!-- <div class="text-danger" th:text="${#httpServletRequest.getParameter('error')}" ></div> -->
+				
+					</form>
+		
+			</div>
+			
+			</div>
+							
+			</div>
+	
+			<div class="panel panel-primary" th:if="${compte}">
+					<div class="panel-heading">Liste der Operationen</div>
+					<div class="panel-body">
+					<table class="table table-striped">
+						<tr>
+						<th>Num</th><th>Type</th><th>Datum</th><th>Betrag</th>
+						</tr>
+						<!-- on affiche les operation grace a thymleaf -->
+						
+						<tr th:each="o:${listOperations}">
+							
+							<td th:text="${o.numero}"></td>
+							<td th:text="${o.class.simpleName}"></td>
+							<td th:text="${o.dateOperation}"></td>
+							<td th:text="${o.montant}"></td>
+								
+						</tr>
+						
+					</table>
+					
+					<div class="container">
+					<ul class="nav nav-pills">
+					
+					<li th:each="p,status:${pages}">
+						<a th:href="@{/consulterCompte(codeCompte=${codeCompte}, page=${status.index})}"
+						
+						 th:text="${status.index}"></a>
+					
+					</li>
+					
+					
+					</ul>
+					
+					</div>
+					
+					</div>
+			
+			</div>
+				
+		</div>
+		
+		
+</div>
+
+</body>
+</html>
